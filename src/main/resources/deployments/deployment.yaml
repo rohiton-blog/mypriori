@@ -1,0 +1,57 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: mypriori-app
+  labels:
+    name: mypriori-app
+spec:
+  ports:
+    - nodePort: 30164 
+      port: 8080      
+      targetPort: 8080  
+      protocol: TCP
+  selector:           
+    app: mypriori-app
+  type: LoadBalancer       
+
+---
+apiVersion: apps/v1 
+kind: Deployment    
+metadata:              
+  name: mypriori-app
+spec:                
+  selector:         
+    matchLabels:
+      app: mypriori-app
+  replicas: 1      
+  template:
+    metadata:
+      labels:        
+        app: mypriori-app
+    spec:
+      containers:
+        - name: mypriori-app
+          image: 100598/mypriori-app:1.0
+          ports:
+            - containerPort: 8080                
+          env:   # Setting Enviornmental Variables
+          - name: DB_HOST   # Setting Database host address from configMap
+            valueFrom: 
+              configMapKeyRef:
+                name: mysql-configuration  # name of configMap
+                key: host
+          - name: DB_NAME  # Setting Database name from configMap
+            valueFrom:
+              configMapKeyRef:
+                name: mysql-configuration 
+                key: name
+          - name: DB_USERNAME  # Setting Database username from Secret
+            valueFrom:
+              secretKeyRef:
+                name: mysql-user-credentials # Secret Name
+                key: username
+          - name: DB_PASSWORD # Setting Database password from Secret
+            valueFrom:
+              secretKeyRef:
+                name: mysql-user-credentials
+                key: password     
